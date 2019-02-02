@@ -8,15 +8,9 @@ import (
 	"github.com/nlopes/slack"
 )
 
-const (
-	actionSelect = "select"
-	actionStart  = "start"
-	actionCancel = "cancel"
-)
-
 type eventHandler struct {
-	client *slack.Client
-	botUserID  string
+	client    *slack.Client
+	botUserID string
 }
 
 func (h *eventHandler) listen() {
@@ -49,54 +43,20 @@ func (h *eventHandler) handleMessageEvent(ev *slack.MessageEvent) error {
 		return nil
 	}
 
+	var action action
 	switch c[0] {
-	case "deploy":
-		// TODO: Get a list of branches from GitHub
-		attachment := slack.Attachment{
-			Text:       "Select a branch to deploy",
-			Color:      "#f9a41b",
-			CallbackID: "deploy_branch",
-			Actions: []slack.AttachmentAction{
-				{
-					Name: actionSelect,
-					Type: "select",
-					Options: []slack.AttachmentActionOption{
-						{
-							Text:  "master",
-							Value: "master",
-						},
-						{
-							Text:  "branch-1",
-							Value: "branch-1",
-						},
-						{
-							Text:  "branch-2",
-							Value: "branch-2",
-						},
-					},
-				},
-
-				{
-					Name:  actionCancel,
-					Text:  "Cancel",
-					Type:  "button",
-					Style: "danger",
-				},
-			},
-		}
-
-		if _, _, err := h.client.PostMessage(ev.Channel, slack.MsgOptionAttachments(attachment)); err != nil {
-			return fmt.Errorf("Something went wront. Error: %s", err)
-		}
-
-		return nil
-	case "code_freeze":
+	case commandDeploy:
+		action = deploySelectBranchAction{h.client, ev.Channel}
+	case commandCodeFreeze:
 		return fmt.Errorf("Sorry, `%s` is not supported yet", c)
-	case "submit":
+	case commandSubmit:
 		return fmt.Errorf("Sorry, `%s` is not supported yet", c)
-	case "release":
+	case commandRelease:
 		return fmt.Errorf("Sorry, `%s` is not supported yet", c)
 	default:
 		return fmt.Errorf("Sorry, I don't understand %s", c)
 	}
+
+	action.run()
+	return nil
 }

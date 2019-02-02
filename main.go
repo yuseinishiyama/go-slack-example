@@ -26,10 +26,12 @@ func _main(args []string) int {
 	}
 	go eventHandler.listen()
 
-	// http.Handle("/", urlVerification{})
-	// http.Handle("/interaction", interactionHandler{
-	// 	verificationToken: env.VerificationToken,
-	// })
+	//http.Handle("/", urlVerification{})
+
+	http.Handle("/interaction", interactionHandler{
+		client: client,
+		verificationToken: os.Getenv("VERIFICATION_TOKEN"),
+	})
 
 	log.Printf("[INFO] Listening port :3000")
 	if err := http.ListenAndServe(":3000", nil); err != nil {
